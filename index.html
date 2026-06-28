@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>影刃对决 Online</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="app">
+    <section class="topbar">
+      <div>
+        <h1>影刃对决 Online</h1>
+        <p>原创线上横版格斗，可开房间联机</p>
+      </div>
+      <div class="room-status" id="roomStatus">未进入房间</div>
+    </section>
+
+    <section class="join-panel" id="joinPanel">
+      <label>
+        昵称
+        <input id="nameInput" maxlength="10" placeholder="例如 小明">
+      </label>
+      <label>
+        房间号
+        <input id="roomInput" maxlength="12" placeholder="例如 8888">
+      </label>
+      <label>
+        角色
+        <select id="fighterInput">
+          <option value="blade">星刃剑士</option>
+          <option value="shadow">影遁忍者</option>
+          <option value="flame">炎拳武者</option>
+          <option value="thunder">雷鸣枪手</option>
+        </select>
+      </label>
+      <button id="joinBtn">进入房间</button>
+      <button id="resetBtn" class="ghost" disabled>重开本局</button>
+    </section>
+
+    <section class="hud">
+      <div class="player-card left">
+        <strong id="p1Name">等待玩家</strong>
+        <div class="hp"><span id="p1Hp"></span></div>
+        <small id="p1Meta">P1</small>
+      </div>
+      <div class="timer" id="timer">99</div>
+      <div class="player-card right">
+        <strong id="p2Name">等待玩家</strong>
+        <div class="hp"><span id="p2Hp"></span></div>
+        <small id="p2Meta">P2</small>
+      </div>
+    </section>
+
+    <section class="arena-wrap">
+      <canvas id="game" width="960" height="540"></canvas>
+      <div class="center-message" id="centerMessage">输入房间号开始</div>
+    </section>
+
+    <section class="controls">
+      <div class="pad">
+        <button data-key="a">左</button>
+        <button data-key="w">跳</button>
+        <button data-key="d">右</button>
+        <button data-key="s">防</button>
+      </div>
+      <div class="skills">
+        <button data-action="attack">普攻</button>
+        <button data-action="dash">突进</button>
+        <button data-action="shot">气弹</button>
+        <button data-action="ult">必杀</button>
+      </div>
+    </section>
+
+    <section class="tips">
+      A/D 移动，W 跳跃，S 防御，J 普攻，K 突进斩，L 气弹，U 必杀。
+    </section>
+  </main>
+  <script src="/client.js"></script>
+</body>
+</html>

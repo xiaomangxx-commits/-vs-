@@ -1,0 +1,12 @@
+{
+  "name": "anime-fighter-online",
+  "version": "1.0.0",
+  "description": "Original online anime-style fighting game for Render",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
