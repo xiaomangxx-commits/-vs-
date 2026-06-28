@@ -5,27 +5,28 @@ const crypto = require("crypto");
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC = __dirname;
-const TICK_MS = 50;
+const TICK_MS = 33;
+const BROADCAST_MS = 66;
 const ROUND_SECONDS = 99;
 const WORLD = { w: 960, h: 540, floor: 448 };
 
 const fighters = {
-  blade: { name: "星刃剑士", color: "#7dd3fc", speed: 5.5, jump: 13.2, hp: 1000, melee: 60, shot: 70, ult: 220 },
-  shadow: { name: "影遁忍者", color: "#c084fc", speed: 6.5, jump: 13.8, hp: 900, melee: 54, shot: 65, ult: 205 },
-  flame: { name: "炎拳武者", color: "#fb7185", speed: 4.9, jump: 12.2, hp: 1140, melee: 70, shot: 62, ult: 240 },
-  thunder: { name: "雷鸣枪手", color: "#facc15", speed: 5.7, jump: 12.8, hp: 960, melee: 58, shot: 88, ult: 215 },
-  frost: { name: "霜月术士", color: "#67e8f9", speed: 5.0, jump: 12.6, hp: 980, melee: 52, shot: 96, ult: 210 },
-  lotus: { name: "莲华拳姬", color: "#f9a8d4", speed: 6.1, jump: 13.4, hp: 930, melee: 66, shot: 56, ult: 218 },
-  iron: { name: "铁壁重卫", color: "#94a3b8", speed: 4.2, jump: 11.5, hp: 1280, melee: 78, shot: 55, ult: 260 },
-  wind: { name: "风牙游侠", color: "#86efac", speed: 6.8, jump: 14.1, hp: 880, melee: 50, shot: 82, ult: 198 },
-  void: { name: "虚空行者", color: "#a78bfa", speed: 5.4, jump: 13.0, hp: 990, melee: 58, shot: 74, ult: 230 },
-  sun: { name: "曜阳武士", color: "#fdba74", speed: 5.3, jump: 12.7, hp: 1060, melee: 68, shot: 68, ult: 235 }
+  blade: { name: "水纹剑士", style: "水纹三连", color: "#7dd3fc", speed: 5.7, jump: 13.4, hp: 1000, melee: 60, shot: 72, ult: 220 },
+  shadow: { name: "雾影斩者", style: "雾步瞬斩", color: "#c084fc", speed: 6.6, jump: 13.8, hp: 910, melee: 55, shot: 66, ult: 205 },
+  flame: { name: "炎轮武士", style: "炎轮裂空", color: "#fb7185", speed: 5.0, jump: 12.3, hp: 1140, melee: 72, shot: 64, ult: 242 },
+  thunder: { name: "雷闪少年", style: "一闪雷鸣", color: "#facc15", speed: 6.0, jump: 13.0, hp: 960, melee: 60, shot: 88, ult: 218 },
+  frost: { name: "霜月医师", style: "冰蝶针雨", color: "#67e8f9", speed: 5.2, jump: 12.8, hp: 980, melee: 53, shot: 96, ult: 212 },
+  lotus: { name: "花息拳姬", style: "落花回旋", color: "#f9a8d4", speed: 6.2, jump: 13.6, hp: 930, melee: 67, shot: 58, ult: 218 },
+  iron: { name: "岩铠重卫", style: "岩断重击", color: "#94a3b8", speed: 4.3, jump: 11.6, hp: 1280, melee: 80, shot: 55, ult: 262 },
+  wind: { name: "疾风游侠", style: "风牙乱舞", color: "#86efac", speed: 6.9, jump: 14.2, hp: 880, melee: 52, shot: 82, ult: 198 },
+  void: { name: "月影行者", style: "月弧穿影", color: "#a78bfa", speed: 5.5, jump: 13.1, hp: 990, melee: 58, shot: 75, ult: 230 },
+  sun: { name: "日曜剑豪", style: "日轮破晓", color: "#fdba74", speed: 5.5, jump: 12.8, hp: 1060, melee: 69, shot: 70, ult: 238 }
 };
 
 const maps = {
-  city: { name: "夜都天台", sky: "#172033", mid: "#151921", floor: "#1f2937", line: "#334155" },
-  shrine: { name: "赤月神社", sky: "#2b1620", mid: "#18121c", floor: "#2a1c24", line: "#7f1d1d" },
-  storm: { name: "雷云峡谷", sky: "#101827", mid: "#0f172a", floor: "#172554", line: "#38bdf8" }
+  city: { name: "藤影山道", sky: "#172033", mid: "#151921", floor: "#1f2937", line: "#8b5cf6", song: "山道进行曲" },
+  shrine: { name: "赤灯古院", sky: "#2b1620", mid: "#18121c", floor: "#2a1c24", line: "#fb7185", song: "古院战鼓" },
+  storm: { name: "雷云断崖", sky: "#101827", mid: "#0f172a", floor: "#172554", line: "#38bdf8", song: "断崖雷步" }
 };
 
 const rooms = new Map();
@@ -299,7 +300,6 @@ function publicState(room) {
     world: WORLD,
     mapKey: room.mapKey,
     map: maps[room.mapKey],
-    fighters,
     aiMode: room.aiMode,
     players: room.players.map((p) => ({
       id: p.id,
@@ -329,11 +329,14 @@ function publicState(room) {
 
 setInterval(() => {
   rooms.forEach((room) => updateRoom(room));
+}, TICK_MS);
+
+setInterval(() => {
   clients.forEach((client) => {
     const room = rooms.get(client.roomId);
     if (room) client.res.write(`data: ${JSON.stringify(publicState(room))}\n\n`);
   });
-}, TICK_MS);
+}, BROADCAST_MS);
 
 function readJson(req) {
   return new Promise((resolve) => {

@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>影刃对决 Online</title>
+  <title>斩影对决 Online</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <main class="app">
     <section class="topbar">
       <div>
-        <h1>影刃对决 Online</h1>
-        <p>原创线上横版动漫格斗，可开房间、打 AI、和朋友联机</p>
+        <h1>斩影对决 Online</h1>
+        <p>原创斩鬼风格横版格斗，可开房间、打 AI、和朋友联机</p>
       </div>
       <div class="room-status" id="roomStatus">未进入房间</div>
     </section>
@@ -28,24 +28,24 @@
       <label>
         角色
         <select id="fighterInput">
-          <option value="blade">星刃剑士</option>
-          <option value="shadow">影遁忍者</option>
-          <option value="flame">炎拳武者</option>
-          <option value="thunder">雷鸣枪手</option>
-          <option value="frost">霜月术士</option>
-          <option value="lotus">莲华拳姬</option>
-          <option value="iron">铁壁重卫</option>
-          <option value="wind">风牙游侠</option>
-          <option value="void">虚空行者</option>
-          <option value="sun">曜阳武士</option>
+          <option value="blade">水纹剑士</option>
+          <option value="shadow">雾影斩者</option>
+          <option value="flame">炎轮武士</option>
+          <option value="thunder">雷闪少年</option>
+          <option value="frost">霜月医师</option>
+          <option value="lotus">花息拳姬</option>
+          <option value="iron">岩铠重卫</option>
+          <option value="wind">疾风游侠</option>
+          <option value="void">月影行者</option>
+          <option value="sun">日曜剑豪</option>
         </select>
       </label>
       <label>
         地图
         <select id="mapInput">
-          <option value="city">夜都天台</option>
-          <option value="shrine">赤月神社</option>
-          <option value="storm">雷云峡谷</option>
+          <option value="city">藤影山道</option>
+          <option value="shrine">赤灯古院</option>
+          <option value="storm">雷云断崖</option>
         </select>
       </label>
       <label>
@@ -59,6 +59,8 @@
       </label>
       <button id="joinBtn">进入房间</button>
       <button id="resetBtn" class="ghost" disabled>重开本局</button>
+      <button id="musicBtn" class="ghost">音乐：关</button>
+      <button id="qualityBtn" class="ghost">特效：高</button>
     </section>
 
     <section class="hud">
@@ -96,7 +98,7 @@
     </section>
 
     <section class="tips">
-      A/D 移动，W 跳跃，S 防御，J 普攻，K 突进斩，L 气弹，U 必杀。一个人玩时可打开 AI 对手。
+      A/D 移动，W 跳跃，S 防御，J 普攻，K 呼吸突进，L 远程剑气，U 终式。音乐为原创生成曲，不使用动漫歌曲。
     </section>
   </main>
   <script src="/client.js"></script>

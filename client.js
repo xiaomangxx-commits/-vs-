@@ -7,6 +7,8 @@ const roomInput = document.getElementById("roomInput");
 const fighterInput = document.getElementById("fighterInput");
 const mapInput = document.getElementById("mapInput");
 const aiInput = document.getElementById("aiInput");
+const musicBtn = document.getElementById("musicBtn");
+const qualityBtn = document.getElementById("qualityBtn");
 const roomStatus = document.getElementById("roomStatus");
 const centerMessage = document.getElementById("centerMessage");
 const timerEl = document.getElementById("timer");
@@ -27,6 +29,12 @@ let roomId = "";
 let mySlot = "";
 let state = null;
 let events = null;
+let musicOn = false;
+let lowEffects = false;
+let audio = null;
+let musicTimer = null;
+let musicStep = 0;
+let lastMapKey = "";
 const input = { a: false, d: false, w: false, s: false };
 const keyMap = { a: "a", d: "d", w: "w", s: "s", ArrowLeft: "a", ArrowRight: "d", ArrowUp: "w", ArrowDown: "s" };
 const actionMap = { j: "attack", k: "dash", l: "shot", u: "ult", J: "attack", K: "dash", L: "shot", U: "ult" };
@@ -122,10 +130,26 @@ document.querySelectorAll("[data-action]").forEach((btn) => {
   });
 });
 
-setInterval(sendInput, 90);
+musicBtn.addEventListener("click", () => {
+  musicOn = !musicOn;
+  musicBtn.textContent = `音乐：${musicOn ? "开" : "关"}`;
+  if (musicOn) startMusic();
+  else stopMusic();
+});
+
+qualityBtn.addEventListener("click", () => {
+  lowEffects = !lowEffects;
+  qualityBtn.textContent = `特效：${lowEffects ? "低" : "高"}`;
+});
+
+setInterval(sendInput, 66);
 
 function updateHud() {
   if (!state) return;
+  if (musicOn && state.mapKey !== lastMapKey) {
+    lastMapKey = state.mapKey;
+    startMusic();
+  }
   const [a, b] = state.players;
   timerEl.textContent = state.timeLeft;
   setCard(a, p1Name, p1Hp, p1Meta, "P1");
@@ -144,7 +168,74 @@ function setCard(p, nameEl, hpEl, metaEl, fallback) {
   }
   nameEl.textContent = `${p.slot} ${p.name}${p.isAI ? " · AI" : ""}`;
   hpEl.style.width = `${Math.max(0, (p.hp / p.maxHp) * 100)}%`;
-  metaEl.textContent = `${p.fighterName} · 气 ${Math.floor(p.energy)}`;
+  metaEl.textContent = `${p.fighterName} · ${skillName(p.fighterKey)} · 气 ${Math.floor(p.energy)}`;
+}
+
+function skillName(key) {
+  return {
+    blade: "水纹三连",
+    shadow: "雾步瞬斩",
+    flame: "炎轮裂空",
+    thunder: "一闪雷鸣",
+    frost: "冰蝶针雨",
+    lotus: "落花回旋",
+    iron: "岩断重击",
+    wind: "风牙乱舞",
+    void: "月弧穿影",
+    sun: "日轮破晓"
+  }[key] || "终式";
+}
+
+function ensureAudio() {
+  if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+  if (audio.state === "suspended") audio.resume();
+}
+
+function playTone(freq, start, dur, type, gainValue) {
+  const osc = audio.createOscillator();
+  const gain = audio.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(gainValue, start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  osc.connect(gain);
+  gain.connect(audio.destination);
+  osc.start(start);
+  osc.stop(start + dur + 0.02);
+}
+
+function startMusic() {
+  stopMusic();
+  if (!musicOn) return;
+  ensureAudio();
+  const patterns = {
+    city: [220, 277, 330, 277, 392, 330, 277, 247],
+    shrine: [196, 247, 294, 330, 294, 247, 220, 196],
+    storm: [165, 220, 330, 440, 392, 330, 247, 220]
+  };
+  const bass = {
+    city: [110, 110, 98, 123],
+    shrine: [98, 98, 82, 110],
+    storm: [82, 110, 165, 147]
+  };
+  musicStep = 0;
+  musicTimer = setInterval(() => {
+    if (!audio) return;
+    const key = state?.mapKey || "city";
+    const now = audio.currentTime;
+    const melody = patterns[key] || patterns.city;
+    const bassline = bass[key] || bass.city;
+    playTone(melody[musicStep % melody.length], now, 0.12, "square", 0.035);
+    if (musicStep % 2 === 0) playTone(bassline[Math.floor(musicStep / 2) % bassline.length], now, 0.18, "sawtooth", 0.028);
+    if (musicStep % 4 === 0) playTone(55, now, 0.05, "triangle", 0.05);
+    musicStep += 1;
+  }, 180);
+}
+
+function stopMusic() {
+  if (musicTimer) clearInterval(musicTimer);
+  musicTimer = null;
 }
 
 function drawBackground() {
@@ -156,11 +247,13 @@ function drawBackground() {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = "rgba(255,255,255,0.08)";
-  for (let i = 0; i < 32; i++) {
-    const x = (i * 91 + 40) % canvas.width;
-    const y = 38 + ((i * 37) % 180);
-    ctx.fillRect(x, y, i % 3 === 0 ? 3 : 2, 2);
+  if (!lowEffects) {
+    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    for (let i = 0; i < 24; i++) {
+      const x = (i * 91 + 40) % canvas.width;
+      const y = 38 + ((i * 37) % 180);
+      ctx.fillRect(x, y, i % 3 === 0 ? 3 : 2, 2);
+    }
   }
 
   if (state?.mapKey === "shrine") {
@@ -220,7 +313,7 @@ function drawFighter(p) {
   ctx.fill();
 
   ctx.shadowColor = p.color;
-  ctx.shadowBlur = 12;
+  ctx.shadowBlur = lowEffects ? 0 : 12;
   ctx.strokeStyle = p.color;
   ctx.lineWidth = 7;
   ctx.lineCap = "round";
@@ -267,7 +360,7 @@ function drawProjectile(b) {
   ctx.save();
   ctx.fillStyle = b.color;
   ctx.shadowColor = b.color;
-  ctx.shadowBlur = 18;
+  ctx.shadowBlur = lowEffects ? 0 : 18;
   ctx.beginPath();
   ctx.arc(b.x, b.y, 14, 0, Math.PI * 2);
   ctx.fill();
@@ -283,7 +376,7 @@ function drawSlash(s) {
   ctx.scale(s.face, 1);
   ctx.strokeStyle = s.color;
   ctx.shadowColor = s.color;
-  ctx.shadowBlur = 16;
+  ctx.shadowBlur = lowEffects ? 0 : 16;
   ctx.lineWidth = s.dash ? 9 : 6;
   ctx.beginPath();
   ctx.arc(0, 0, s.dash ? 58 : 38, -0.8, 0.8);
@@ -296,7 +389,7 @@ function drawSpark(s) {
   ctx.globalAlpha = Math.min(1, s.life / 10);
   ctx.strokeStyle = s.ult ? s.color || "#facc15" : s.guarded ? "#7dd3fc" : "#ffffff";
   ctx.shadowColor = ctx.strokeStyle;
-  ctx.shadowBlur = s.ult ? 22 : 10;
+  ctx.shadowBlur = lowEffects ? 0 : s.ult ? 22 : 10;
   ctx.lineWidth = s.ult ? 8 : 4;
   for (let i = 0; i < 10; i++) {
     const a = (Math.PI * 2 * i) / 10;
@@ -320,8 +413,9 @@ function render() {
   if (state) {
     state.projectiles.forEach(drawProjectile);
     state.players.forEach(drawFighter);
-    state.slashes.forEach(drawSlash);
-    state.sparks.forEach(drawSpark);
+    if (!lowEffects) state.slashes.forEach(drawSlash);
+    const sparks = lowEffects ? state.sparks.slice(-3) : state.sparks;
+    sparks.forEach(drawSpark);
   }
   requestAnimationFrame(render);
 }
